@@ -4,6 +4,23 @@
   },
   "interactions": [
     {
+      "description": "A request to get product",
+      "providerStates": [
+        {
+          "name": "product not exist"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/products/3"
+      },
+      "response": {
+        "headers": {
+        },
+        "status": 404
+      }
+    },
+    {
       "description": "A request to get products",
       "providerStates": [
         {

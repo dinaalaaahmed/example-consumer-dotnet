@@ -7,11 +7,13 @@ using Consumer;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net;
+using System.Text.Json.Nodes;
 using PactNet.Matchers;
 using FluentAssertions;
 using PactNet.Infrastructure.Outputters;
 using PactNet.Output.Xunit;
 using System.Threading.Tasks;
+using Xunit.Sdk;
 
 namespace tests
 {
@@ -48,7 +50,7 @@ namespace tests
                         .Given("products exist")
                         .WithRequest(HttpMethod.Get, "/products")
                     .WillRespond()
-                    .WithStatus(HttpStatusCode.NotFound)
+                    .WithStatus(HttpStatusCode.OK)
                     .WithHeader("Content-Type", "application/json; charset=utf-8")
                     .WithJsonBody(Match.MinType(products[0],1));
 
@@ -71,17 +73,16 @@ namespace tests
         {
             // Arrange
             pact.UponReceiving("A request to get product")
-                .Given("product not exist")
+                .Given("no products exist")
                 .WithRequest(HttpMethod.Get, $"/products/{productId}")
                 .WillRespond()
-                .WithStatus(HttpStatusCode.NotFound)
-                .WithHeader("Content-Type", "application/json; charset=utf-8");
-
+                .WithStatus(HttpStatusCode.NotFound);
+            
             await pact.VerifyAsync(async ctx =>
             {
                 // Act
                 var consumer = new ProductClient();
-                Product result = await consumer.GetProduct(ctx.MockServerUri.ToString().TrimEnd('/'), productId);
+                Product? result = await consumer.GetProduct(ctx.MockServerUri.ToString().TrimEnd('/'), productId);
                 // Assert
                 result.Should().BeNull();
             });
