@@ -21,7 +21,7 @@ namespace tests
         // private readonly int port = 9222;
 
         private readonly List<object> products;
-
+        private readonly string productId = "3";
         public ConsumerPactTests(ITestOutputHelper output)
         {
 
@@ -48,7 +48,7 @@ namespace tests
                         .Given("products exist")
                         .WithRequest(HttpMethod.Get, "/products")
                     .WillRespond()
-                    .WithStatus(HttpStatusCode.OK)
+                    .WithStatus(HttpStatusCode.NotFound)
                     .WithHeader("Content-Type", "application/json; charset=utf-8")
                     .WithJsonBody(Match.MinType(products[0],1));
 
@@ -63,6 +63,27 @@ namespace tests
                 Assert.Equal("27",result[0].id);
                 Assert.Equal("burger",result[0].name);
                 Assert.Equal("food",result[0].type);
+            });
+        }
+        
+        [Fact]
+        public async Task ProductNotFound()
+        {
+            // Arrange
+            pact.UponReceiving("A request to get product")
+                .Given("product not exist")
+                .WithRequest(HttpMethod.Get, $"/products/{productId}")
+                .WillRespond()
+                .WithStatus(HttpStatusCode.NotFound)
+                .WithHeader("Content-Type", "application/json; charset=utf-8");
+
+            await pact.VerifyAsync(async ctx =>
+            {
+                // Act
+                var consumer = new ProductClient();
+                Product result = await consumer.GetProduct(ctx.MockServerUri.ToString().TrimEnd('/'), productId);
+                // Assert
+                result.Should().BeNull();
             });
         }
     }
